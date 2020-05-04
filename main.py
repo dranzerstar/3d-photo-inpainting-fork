@@ -19,6 +19,8 @@ from networks import Inpaint_Color_Net, Inpaint_Depth_Net, Inpaint_Edge_Net
 from MiDaS.run import run_depth
 from MiDaS.monodepth_net import MonoDepthNet
 import MiDaS.MiDaS_utils as MiDaS_utils
+import matplotlib.pyplot as plt
+from PIL import Image
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
@@ -29,6 +31,9 @@ if config['offscreen_rendering'] is True:
 os.makedirs(config['mesh_folder'], exist_ok=True)
 os.makedirs(config['video_folder'], exist_ok=True)
 os.makedirs(config['depth_folder'], exist_ok=True)
+os.makedirs('depthimg', exist_ok=True)
+os.makedirs('sbsfmt', exist_ok=True)
+os.makedirs('sbsfmt-potrait90', exist_ok=True)
 sample_list = get_MiDaS_samples(config['src_folder'], config['depth_folder'], config, config['specific'])
 normal_canvas, all_canvas = None, None
 
@@ -44,7 +49,47 @@ for idx in tqdm(range(len(sample_list))):
     mesh_fi = os.path.join(config['mesh_folder'], sample['src_pair_name'] +'.ply')
     image = imageio.imread(sample['ref_img_fi'])
     run_depth([sample['ref_img_fi']], config['src_folder'], config['depth_folder'],
-              config['MiDaS_model_ckpt'], MonoDepthNet, MiDaS_utils, target_w=640)
+              config['MiDaS_model_ckpt'], MonoDepthNet, MiDaS_utils, target_w=1000)
+
+
+    arr = np.load( config['depth_folder']+'/'+sample['src_pair_name']+'.npy')
+    config['output_h'], config['output_w'] = np.load(sample['depth_fi']).shape[:2]
+    frac = 900 / max(config['output_h'], config['output_w'])
+    config['output_h'], config['output_w'] = int(config['output_h'] * frac), int(config['output_w'] * frac)
+    config['original_h'], config['original_w'] = config['output_h'], config['output_w']
+
+    print("output w h",str(config['output_w'])+" "+str(config['output_h']))
+    print("original w h",str(config['original_w'])+" "+str(config['original_h']))
+
+    disp_to_img =np.array(Image.fromarray(arr).resize([int(config.get('original_w')), int(config.get('original_h'))]))
+    plt.imsave(os.path.join('depthimg', "{}_disp.png".format(sample['src_pair_name'])), disp_to_img, cmap='gray')
+
+
+    images = [Image.open(x) for x in ['image/'+sample['src_pair_name']+".jpg", 'depthimg/'+"{}_disp.png".format(sample['src_pair_name']) ]]
+    widths, heights = zip(*(i.size for i in images))
+
+    total_width = sum(widths)
+    max_height = max(heights)
+
+    new_im = Image.new('RGB', (total_width, max_height))
+
+    x_offset = 0
+    for im in images:
+      new_im.paste(im, (x_offset,0))
+      x_offset += im.size[0]
+
+
+    newsize = (int(config.get('original_w')), int(config.get('original_h'))) 
+
+    finalsize= new_im.resize( newsize);
+    print("resize");
+    finalsize.save('sbsfmt/'+sample['src_pair_name']+'.jpg')
+    print("mkpotrait");
+    fpotrait90= finalsize.transpose(method=Image.ROTATE_270) 
+    
+    fpotrait90.save('sbsfmt-potrait90/'+sample['src_pair_name']+'.jpg')
+'''
+           
     config['output_h'], config['output_w'] = np.load(sample['depth_fi']).shape[:2]
     frac = config['longer_side_len'] / max(config['output_h'], config['output_w'])
     config['output_h'], config['output_w'] = int(config['output_h'] * frac), int(config['output_w'] * frac)
@@ -85,6 +130,7 @@ for idx in tqdm(range(len(sample_list))):
         rgb_model.eval()
         rgb_model = rgb_model.to(device)
         graph = None
+        
         rt_info = write_ply(image,
                             depth,
                             sample['int_mtx'],
@@ -115,3 +161,4 @@ for idx in tqdm(range(len(sample_list))):
                         image.copy(), copy.deepcopy(sample['int_mtx']), config, image,
                         videos_poses, video_basename, config.get('original_h'), config.get('original_w'), border=border, depth=depth, normal_canvas=normal_canvas, all_canvas=all_canvas,
                         mean_loc_depth=mean_loc_depth)
+'''
