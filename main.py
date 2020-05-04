@@ -50,10 +50,17 @@ for idx in tqdm(range(len(sample_list))):
     image = imageio.imread(sample['ref_img_fi'])
     run_depth([sample['ref_img_fi']], config['src_folder'], config['depth_folder'],
               config['MiDaS_model_ckpt'], MonoDepthNet, MiDaS_utils, target_w=1000)
+    ig=Image.open('image/'+sample['src_pair_name']+".jpg")
+    w, h = (ig.size)
 
+	
+	
 
     arr = np.load( config['depth_folder']+'/'+sample['src_pair_name']+'.npy')
     config['output_h'], config['output_w'] = np.load(sample['depth_fi']).shape[:2]
+    print("output w h",str(w)+" "+str(h))
+
+
     frac = 900 / max(config['output_h'], config['output_w'])
     config['output_h'], config['output_w'] = int(config['output_h'] * frac), int(config['output_w'] * frac)
     config['original_h'], config['original_w'] = config['output_h'], config['output_w']
@@ -61,7 +68,7 @@ for idx in tqdm(range(len(sample_list))):
     print("output w h",str(config['output_w'])+" "+str(config['output_h']))
     print("original w h",str(config['original_w'])+" "+str(config['original_h']))
 
-    disp_to_img =np.array(Image.fromarray(arr).resize([int(config.get('original_w')), int(config.get('original_h'))]))
+    disp_to_img =np.array(Image.fromarray(arr).resize([w, h]))
     plt.imsave(os.path.join('depthimg', "{}_disp.png".format(sample['src_pair_name'])), disp_to_img, cmap='gray')
 
 
