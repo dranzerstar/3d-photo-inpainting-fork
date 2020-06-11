@@ -74,7 +74,7 @@ process2 = (
     ffmpeg
     .input('pipe:', format='rawvideo', pix_fmt='rgb24', s='{}x{}'.format(width*2, height))
     .filter('scale',width,height)
-    .output('output.mp4', pix_fmt='yuv420p', crf=16, r=rate)
+    .output('output.mp4', pix_fmt='yuv420p', crf=12, r=25)
     .overwrite_output()
     .run_async(pipe_stdin=True)
 )
