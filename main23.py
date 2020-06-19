@@ -30,9 +30,12 @@ import ffmpeg
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
 parser.add_argument('--v', type=str, default='',help='video_input')
+parser.add_argument('--r', type=int, default='',help='frame_rate')
+
 
 args = parser.parse_args()
 v = args.v
+fr = args.r
 config = yaml.load(open(args.config, 'r'))
 if config['offscreen_rendering'] is True:
     vispy.use(app='egl')
@@ -51,8 +54,11 @@ else:
     device = "cpu"
 
 print(v)
-
 in_filename = v
+
+out_filename = v[0:-4] +"-conv.mp4"
+print(out_filename)
+
 
 probe = ffmpeg.probe(in_filename)
 video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
@@ -74,7 +80,7 @@ process2 = (
     ffmpeg
     .input('pipe:', format='rawvideo', pix_fmt='rgb24', s='{}x{}'.format(width*2, height))
     .filter('scale',width,height)
-    .output('output.mp4', pix_fmt='yuv420p', crf=12, r=25)
+    .output(out_filename, pix_fmt='yuv420p', crf=12, r=fr)
     .overwrite_output()
     .run_async(pipe_stdin=True)
 )
