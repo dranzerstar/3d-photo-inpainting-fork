@@ -107,13 +107,18 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
         # compute
     with torch.no_grad():
     	out = model.forward(img_input)
+
     
     disp_to_img = utils.resize_depth(out, w, h) *200
     #depth = np.clip(depth,0,254)
 
+        
+
+   
 #    img = cv2.resize((img * 255).astype(np.uint8), (target_width, target_height), interpolation=cv2.INTER_AREA)
 	    # write_pfm(path + ".pfm", depth.astype(np.float32))
-    #disp_to_img =np.array(Image.fromarray(out).resize([w, h]))*100
+##   disp_to_img =np.array(Image.fromarray(depth).resize([w, h]))
+
 #    plt.imsave("test_disp.jpg", disp_to_img, cmap='gray')
 #    plt.imsave("test2_disp.jpg", img, cmap='gray')
     disp_to_img = np.clip(disp_to_img,0,254)

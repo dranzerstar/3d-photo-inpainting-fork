@@ -1,6 +1,8 @@
-mkdir vidconversiontemp
+@echo off
+rem mkdir vidconversiontemp
+
  
-python main23.py --v %1 --config argumentv.yml
+python main23.py --v %1 --r 25 --config argumentv.yml
 
 rem ffmpeg -i %1 -filter_complex "scale=1920:1080" -r 30 .\vidconversiontemp\tempfilename%%03d.jpg
 
