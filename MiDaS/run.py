@@ -109,7 +109,7 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
     	out = model.forward(img_input)
 
     
-    disp_to_img = utils.resize_depth(out, w, h) *200
+    disp_to_img = 50+ utils.resize_depth(out, w, h) *100
     #depth = np.clip(depth,0,254)
 
         
