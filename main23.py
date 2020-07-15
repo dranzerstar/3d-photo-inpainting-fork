@@ -30,7 +30,7 @@ import ffmpeg
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
 parser.add_argument('--v', type=str, default='',help='video_input')
-parser.add_argument('--r', type=int, default='',help='frame_rate')
+parser.add_argument('--r', type=float, default='',help='frame_rate')
 
 
 args = parser.parse_args()
@@ -80,9 +80,9 @@ process1 = (
 
 process2 = (
     ffmpeg
-    .input('pipe:', format='rawvideo', pix_fmt='rgb24',r=rate, s='{}x{}'.format(width*2, height))
+    .input('pipe:', format='rawvideo', pix_fmt='rgb24', r=rate, s='{}x{}'.format(width*2, height))
     .filter('scale',width,height)
-    .output(out_filename, pix_fmt='yuv420p', crf=12)
+    .output(out_filename, pix_fmt='yuv420p', crf=16)
     .overwrite_output()
     .run_async(pipe_stdin=True)
 )

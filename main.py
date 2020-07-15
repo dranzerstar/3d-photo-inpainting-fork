@@ -86,15 +86,15 @@ for idx in tqdm(range(len(sample_list))):
       x_offset += im.size[0]
 
 
-    newsize = (int(config.get('original_w')), int(config.get('original_h'))) 
+    newsize = (w,h)
 
     finalsize= new_im.resize( newsize);
     print("resize");
-    finalsize.save('sbsfmt/'+sample['src_pair_name']+'.jpg')
+    finalsize.save('sbsfmt/'+sample['src_pair_name']+'.png')
     print("mkpotrait");
     fpotrait90= finalsize.transpose(method=Image.ROTATE_270) 
     
-    fpotrait90.save('sbsfmt-potrait90/'+sample['src_pair_name']+'.jpg')
+    fpotrait90.save('sbsfmt-potrait90/'+sample['src_pair_name']+'.png')
 '''
            
     config['output_h'], config['output_w'] = np.load(sample['depth_fi']).shape[:2]
