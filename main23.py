@@ -64,10 +64,12 @@ probe = ffmpeg.probe(in_filename)
 video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
 width = int(video_stream['width'])
 height = int(video_stream['height'])
-rate = int(video_stream['r_frame_rate'].split('/')[0])
+rate = str(video_stream['r_frame_rate'])
        
 
 print(video_stream)
+print(rate)
+
 
 process1 = (
     ffmpeg
@@ -78,9 +80,9 @@ process1 = (
 
 process2 = (
     ffmpeg
-    .input('pipe:', format='rawvideo', pix_fmt='rgb24', s='{}x{}'.format(width*2, height))
+    .input('pipe:', format='rawvideo', pix_fmt='rgb24',r=rate, s='{}x{}'.format(width*2, height))
     .filter('scale',width,height)
-    .output(out_filename, pix_fmt='yuv420p', crf=12, r=fr)
+    .output(out_filename, pix_fmt='yuv420p', crf=12)
     .overwrite_output()
     .run_async(pipe_stdin=True)
 )
