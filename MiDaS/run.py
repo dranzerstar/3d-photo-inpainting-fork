@@ -22,7 +22,7 @@ def run_depth(img_names, input_path, output_path, model_path, Net, utils, target
     print("initialize")
 
     # select device
-    device = torch.cuda();
+    device = torch.device("cpu")
     print("device: %s" % device)
 
     # load network
@@ -77,7 +77,7 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
     print("initialize")
 
     # select device
-    device = torch.device("cuda")
+    device = torch.device("cpu")
     print("device: %s" % device)
 
     # load network
@@ -97,7 +97,13 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
     
 
                # input
-    img = cv2.cvtColor(img_npy, cv2.COLOR_BGR2RGB) / 255.0 
+    if img_npy.ndim == 2:
+        img = cv2.cvtColor(img_npy, cv2.COLOR_GRAY2BGR)
+
+    img = cv2.cvtColor(img_npy, cv2.COLOR_BGR2RGB) / 255.0
+
+
+
     w = img.shape[1]
     scale = 640. / max(img.shape[0], img.shape[1])
     target_height, target_width = int(round(img.shape[0] * scale)), int(round(img.shape[1] * scale))
@@ -107,28 +113,106 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
         # compute
     with torch.no_grad():
     	out = model.forward(img_input)
-
-    
-    disp_to_img = 50+ utils.resize_depth(out, w, h) *100
-    #depth = np.clip(depth,0,254)
-
         
+    depth = utils.resize_depth(out, target_width, target_height) *255
+    depth = np.clip(depth,0,255)
 #    img = cv2.resize((img * 255).astype(np.uint8), (target_width, target_height), interpolation=cv2.INTER_AREA)
 	    # write_pfm(path + ".pfm", depth.astype(np.float32))
-##   disp_to_img =np.array(Image.fromarray(depth).resize([w, h]))
-
+    disp_to_img =np.array(Image.fromarray(depth).resize([w, h]))
 #    plt.imsave("test_disp.jpg", disp_to_img, cmap='gray')
 #    plt.imsave("test2_disp.jpg", img, cmap='gray')
-    disp_to_img = np.clip(disp_to_img,0,254)
-    disp_to_img = cv2.cvtColor(disp_to_img, cv2.COLOR_GRAY2RGB )
 
-   
+    disp_to_img = cv2.cvtColor(disp_to_img, cv2.COLOR_GRAY2RGB )
+                                                  
+
     	
     sbsframe=  np.hstack((img_npy,disp_to_img))
-
     return  sbsframe
         # utils.write_depth(filename, depth, img, bits=2)
     print("finished")
+
+
+
+
+def run_depthf(in_path,out_path, model_path,w,h, Net, utils, target_w=None):
+    """Run MonoDepthNN to compute depth maps.
+
+    Args:
+        input_path (str): path to input folder
+        output_path (str): path to output folder
+        model_path (str): path to saved model
+    """
+    print("initialize")
+
+    # select device
+    device = torch.device("cpu")
+    print("device: %s" % device)
+
+    # load network
+    model = Net(model_path)
+    model.to(device)
+    model.eval()
+
+    # get input
+    # img_names = glob.glob(os.path.join(input_path, "*"))
+    #num_images = len(img_names)
+
+    # create output folder
+     # os.makedirs(output_path, exist_ok=True)
+
+    print("start processing")
+
+  
+
+        # input
+    img = utils.read_image(in_path)
+    w = img.shape[1]
+    scale = 640. / max(img.shape[0], img.shape[1])
+    target_height, target_width = int(round(img.shape[0] * scale)), int(round(img.shape[1] * scale))
+    img_input = utils.resize_image(img)
+    print(img_input.shape)
+    img_input = img_input.to(device)
+        # compute
+    with torch.no_grad():
+        out = model.forward(img_input)
+        
+    depth = 50 + utils.resize_depth(out, w, h)*150
+    img = cv2.resize((img * 255).astype(np.uint8), (w, h), interpolation=cv2.INTER_AREA)
+    
+    depth = np.clip(depth,0,254)
+#    img = cv2.resize((img * 255).astype(np.uint8), (w, h), interpolation=cv2.INTER_AREA)
+	    # write_pfm(path + ".pfm", depth.astype(np.float32))
+    disp_to_img =np.array(Image.fromarray(depth).resize([w, h]))
+#    plt.imsave("test_disp.jpg", disp_to_img, cmap='gray')
+#    plt.imsave("test2_disp.jpg", img, cmap='gray')
+
+    disp_to_img = cv2.cvtColor(disp_to_img, cv2.COLOR_GRAY2RGB )
+                                                  
+
+    	
+    sbsframe=  np.hstack((img,disp_to_img))
+    sbsframe=  sbsframe.astype(np.uint8)
+
+    print(out_path)
+  
+    k=Image.fromarray(sbsframe)
+    k.save(out_path)
+    #utils.write_depth(out_path, depth, img, bits=2)
+
+    print("finished")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # if __name__ == "__main__":
 #     # set paths
