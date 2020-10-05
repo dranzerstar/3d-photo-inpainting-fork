@@ -77,7 +77,7 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
     print("initialize")
 
     # select device
-    device = torch.device("cpu")
+    device = torch.device("cuda")
     print("device: %s" % device)
 
     # load network
@@ -113,9 +113,12 @@ def run_depthv(img_npy, model_path,w,h, Net, utils, target_w=None):
         # compute
     with torch.no_grad():
     	out = model.forward(img_input)
-        
-    depth = utils.resize_depth(out, target_width, target_height) *255
-    depth = np.clip(depth,0,255)
+            
+            
+    depth = 50 + utils.resize_depth(out, w, h)*130
+    img = cv2.resize((img * 255).astype(np.uint8), (w, h), interpolation=cv2.INTER_AREA)
+    
+    depth = np.clip(depth,0,254)
 #    img = cv2.resize((img * 255).astype(np.uint8), (target_width, target_height), interpolation=cv2.INTER_AREA)
 	    # write_pfm(path + ".pfm", depth.astype(np.float32))
     disp_to_img =np.array(Image.fromarray(depth).resize([w, h]))
@@ -176,7 +179,7 @@ def run_depthf(in_path,out_path, model_path,w,h, Net, utils, target_w=None):
     with torch.no_grad():
         out = model.forward(img_input)
         
-    depth = 50 + utils.resize_depth(out, w, h)*150
+    depth = 50 + utils.resize_depth(out, w, h)*130
     img = cv2.resize((img * 255).astype(np.uint8), (w, h), interpolation=cv2.INTER_AREA)
     
     depth = np.clip(depth,0,254)

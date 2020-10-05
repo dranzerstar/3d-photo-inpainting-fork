@@ -31,9 +31,11 @@ import ffmpeg
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
 parser.add_argument('--v', type=str, default='',help='video_input')
+parser.add_argument('--o', type=str, default='',help='video_input')
 
 args = parser.parse_args()
 v = args.v
+o = args.o
 config = yaml.load(open(args.config, 'r'))
 os.makedirs(config['mesh_folder'], exist_ok=True)
 os.makedirs(config['video_folder'], exist_ok=True)
@@ -50,13 +52,16 @@ else:
     device = "cpu"
 
 print(v)
+print(o)
 
 in_filename = v
+out_filename = o
+
 imageg = Image.open(v)
 image = img = cv2.imread(in_filename)      
 width, height = (imageg.size)
 
-out_filename="out.bmp"
+
 
 out_frame= run_depthf(in_filename ,out_filename ,config['MiDaS_model_ckpt'],width,height, MonoDepthNet, MiDaS_utils, target_w=1000)
 
